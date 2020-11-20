@@ -168,7 +168,8 @@ func (n *node) proposeAndWait(ctx context.Context, proposal *pb.Proposal) (perr 
 			if !ok {
 				// We don't allow mutations for reserved predicates if the schema for them doesn't
 				// already exist.
-				if x.IsReservedPredicate(edge.Attr) {
+				// But we will allow `_predicate_` to be written although it is a reserved predicates.
+				if (x.IsReservedPredicate(edge.Attr) && edge.Attr != "_predicate_") {
 					return errors.Errorf("Can't store predicate `%s` as it is prefixed with "+
 						"`dgraph.` which is reserved as the namespace for dgraph's internal "+
 						"types/predicates.",

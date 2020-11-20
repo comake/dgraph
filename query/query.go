@@ -1417,6 +1417,13 @@ func (sg *SubGraph) populateUidValVar(doneVars map[string]varValue, sgPath []*Su
 	var ok bool
 
 	switch {
+	case sg.Attr == "_predicate_":
+		// This is a predicates list.	
+		doneVars[sg.Params.Var] = varValue{	
+			strList: sg.valueMatrix,	
+			path:    sgPath,	
+			Vals:    make(map[uint64]types.Val),	
+		}
 	case len(sg.counts) > 0:
 		// 1. When count of a predicate is assigned a variable, we store the mapping of uid =>
 		// count(predicate).
@@ -1855,6 +1862,24 @@ func uniquePreds(list []string) []string {
 	return preds
 }
 
+func uniqueValues(vl []*pb.ValueList) []string {
+	predMap := make(map[string]struct{})
+
+	for _, l := range vl {
+		for _, v := range l.Values {
+			if len(v.Val) > 0 {
+				predMap[string(v.Val)] = struct{}{}
+			}
+		}
+	}
+
+	preds := make([]string, 0, len(predMap))
+	for pred := range predMap {
+		preds = append(preds, pred)
+	}
+	return preds
+}
+
 func recursiveCopy(dst *SubGraph, src *SubGraph) {
 	dst.Attr = src.Attr
 	dst.Params = src.Params
@@ -1888,13 +1913,67 @@ func expandSubgraph(ctx context.Context, sg *SubGraph) ([]*SubGraph, error) {
 		}
 
 		var preds []string
+		var rpreds []string
 		typeNames, err := getNodeTypes(ctx, sg)
 		if err != nil {
 			return out, err
 		}
 
 		switch child.Params.Expand {
-		// It could be expand(_all_) or expand(val(x)).
+		// It could be expand(_predicate_) or expand(_all_) or expand(val(x)).
+		case "_predicate_":
+			span.Annotate(nil, "expand(_predicate_)")
+			if len(typeNames) > 0 {
+				preds = getPredicatesFromTypes(typeNames)	
+
+				rpreds, err = getReversePredicates(ctx)	
+				if err != nil {	
+					return out, err	
+				}	
+				preds = append(preds, rpreds...)	
+			}
+
+			// Get the predicate list for expansion.
+			child.ExpandPreds, err = getNodePredicates(ctx, sg)	
+			if err != nil {	
+				return out, err	
+			}	
+			preds = append(preds, uniqueValues(child.ExpandPreds)...)
+
+			actualRpreds, err := getReversePredicates(ctx)	
+			if err != nil {			
+				return out, err
+			}
+			rpreds = append(rpreds, actualRpreds...)
+			preds = append(preds, rpreds...)
+		case "_forward_":
+			span.Annotate(nil, "expand(_forward_)")
+			if len(typeNames) > 0 {
+				preds = getPredicatesFromTypes(typeNames)	
+				break
+			}
+
+			child.ExpandPreds, err = getNodePredicates(ctx, sg)
+			if err != nil {	
+				return out, err	
+			}	
+			preds = uniqueValues(child.ExpandPreds)
+		case "_reverse_":
+			span.Annotate(nil, "expand(_reverse_)")
+			if len(typeNames) > 0 {	
+				rpreds, err := getReversePredicates(ctx)	
+				if err != nil {	
+					return out, err	
+				}	
+				preds = append(preds, rpreds...)	
+				break
+			}
+
+			rpreds, err := getReversePredicates(ctx)
+			if err != nil {
+				return out, err
+			}
+			preds = rpreds
 		case "_all_":
 			span.Annotate(nil, "expand(_all_)")
 			if len(typeNames) == 0 {
@@ -2563,6 +2642,38 @@ func isAggregatorFn(f string) bool {
 
 func isUidFnWithoutVar(f *gql.Function) bool {
 	return f != nil && f.Name == "uid" && len(f.NeedsVar) == 0
+}
+
+func getNodePredicates(ctx context.Context, sg *SubGraph) ([]*pb.ValueList, error) {	
+	temp := &SubGraph{	
+		Attr:    "_predicate_",	
+		SrcUIDs: sg.DestUIDs,	
+		ReadTs:  sg.ReadTs,	
+	}	
+	taskQuery, err := createTaskQuery(temp)	
+	if err != nil {	
+		return nil, err	
+	}	
+	result, err := worker.ProcessTaskOverNetwork(ctx, taskQuery)	
+	if err != nil {	
+		return nil, err	
+	}	
+	return result.ValueMatrix, nil	
+}	
+
+func getReversePredicates(ctx context.Context) ([]string, error) {	
+	schs, err := worker.GetSchemaOverNetwork(ctx, &pb.SchemaRequest{})	
+	if err != nil {	
+		return nil, err	
+	}	
+	preds := make([]string, 0, len(schs))	
+	for _, sch := range schs {	
+		if !sch.Reverse {	
+			continue	
+		}	
+		preds = append(preds, "~"+sch.Predicate)	
+	}	
+	return preds, nil	
 }
 
 func getNodeTypes(ctx context.Context, sg *SubGraph) ([]string, error) {

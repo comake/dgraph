@@ -688,7 +688,8 @@ func IsPreDefinedType(typ string) bool {
 	return ok
 }
 
-// isReservedName returns true if the given name is prefixed with `dgraph.`
+// isReservedName returns true if the given name is prefixed with `dgraph.` or is `_predicate_`. 
 func isReservedName(name string) bool {
-	return strings.HasPrefix(strings.ToLower(name), "dgraph.")
+	return (strings.HasPrefix(strings.ToLower(name), "dgraph.") ||
+			name == "_predicate_")
 }
