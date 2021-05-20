@@ -1946,6 +1946,41 @@ func expandSubgraph(ctx context.Context, sg *SubGraph) ([]*SubGraph, error) {
 			}
 			rpreds = append(rpreds, actualRpreds...)
 			preds = append(preds, rpreds...)
+
+		case "_userpredicate_":
+			span.Annotate(nil, "expand(_userpredicate_)")
+			if len(typeNames) > 0 {
+				preds = getPredicatesFromTypes(typeNames)	
+
+				rpreds, err = getReversePredicates(ctx)	
+				if err != nil {	
+					return out, err	
+				}	
+				preds = append(preds, rpreds...)	
+			}
+
+			// Get the predicate list for expansion.
+			child.ExpandPreds, err = getNodePredicates(ctx, sg)	
+			if err != nil {	
+				return out, err	
+			}	
+			preds = append(preds, uniqueValues(child.ExpandPreds)...)
+
+			actualRpreds, err := getReversePredicates(ctx)	
+			if err != nil {			
+				return out, err
+			}
+			rpreds = append(rpreds, actualRpreds...)
+			preds = append(preds, rpreds...)
+
+			tmp := preds[:0]
+			for _, v := range preds {
+				if !(strings.HasPrefix(v, "unigraph.") || strings.HasPrefix(v, "~unigraph.")) {
+					tmp = append(tmp, v)
+				}
+			}
+			preds = tmp
+
 		case "_forward_":
 			span.Annotate(nil, "expand(_forward_)")
 			if len(typeNames) > 0 {
