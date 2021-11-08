@@ -1975,7 +1975,7 @@ func expandSubgraph(ctx context.Context, sg *SubGraph) ([]*SubGraph, error) {
 
 			tmp := preds[:0]
 			for _, v := range preds {
-				if !(strings.HasPrefix(v, "unigraph.") || strings.HasPrefix(v, "~")) {
+				if !(strings.HasPrefix(v, "unigraph.") || strings.HasPrefix(v, "~") || v == "_definition") {
 					tmp = append(tmp, v)
 				}
 			}
