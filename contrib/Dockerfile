@@ -1,9 +1,3 @@
-# This file is used to add the nightly Dgraph binaries and assets to Dgraph base
-# image.
-
-# This gets built as part of release.sh. Must be run from /tmp/build, with the linux binaries
-# already built and placed there.
-
 FROM golang:1.17.3-bullseye AS build
 
 RUN apt-get update && \
@@ -17,7 +11,6 @@ COPY . .
 RUN make install
 
 FROM ubuntu:latest
-LABEL maintainer="Dgraph Labs <contact@dgraph.io>"
 
 RUN apt-get update && \
   apt-get install -y --no-install-recommends ca-certificates curl iputils-ping && \
