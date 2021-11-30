@@ -57,7 +57,7 @@ Then clone the Dgraph repository and use `make install` to install the Dgraph bi
 
 
 ```bash
-git clone https://github.com/dgraph-io/dgraph.git
+git clone https://github.com/unigraph-dev/dgraph.git
 cd ./dgraph
 make install
 ```
