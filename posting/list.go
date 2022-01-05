@@ -456,6 +456,9 @@ func GetConflictKey(pk x.ParsedKey, key []byte, t *pb.DirectedEdge) uint64 {
 
 	var conflictKey uint64
 	switch {
+	case t.Attr == "_predicate_":
+		// Don't check for conflict.
+		break
 	case schema.State().HasNoConflict(t.Attr):
 		break
 	case schema.State().HasUpsert(t.Attr):

@@ -75,6 +75,9 @@ type WorkerOptions struct {
 	TLSClientConfig *tls.Config
 	// TLS server config which will be used to initiate server internal port
 	TLSServerConfig *tls.Config
+	// Whether to expand edges without explicitly defining them in type system.
+	// Enabling it would decrease performance but add the flexibility to query arbitrary element for full data.
+	ExpandEdge bool
 	// RaftId represents the id of this alpha instance for participating in the RAFT
 	// consensus protocol.
 	RaftId uint64

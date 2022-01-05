@@ -63,15 +63,27 @@ func expandEdges(ctx context.Context, m *pb.Mutations) ([]*pb.DirectedEdge, erro
 		x.AssertTrue(edge.Op == pb.DirectedEdge_DEL || edge.Op == pb.DirectedEdge_SET)
 
 		var preds []string
+		var preds_actual []string // The actual predicates of the node, using the internal _predicate_ attribute.
 		if edge.Attr != x.Star {
 			preds = []string{edge.Attr}
+			preds_actual = []string{edge.Attr}
 		} else {
 			sg := &SubGraph{}
 			sg.DestUIDs = &pb.List{Uids: []uint64{edge.GetEntity()}}
 			sg.ReadTs = m.StartTs
 			types, err := getNodeTypes(ctx, sg)
+			valMatrix, err := getNodePredicates(ctx, sg)
 			if err != nil {
 				return nil, err
+			}
+			if len(valMatrix) != 1 {
+				return nil, errors.Errorf("Expected only one list in value matrix while deleting: %v",
+					edge.GetEntity())	
+			}	
+			for _, tv := range valMatrix[0].Values {	
+				if len(tv.Val) > 0 {	
+					preds_actual = append(preds_actual, string(tv.Val))	
+				}	
 			}
 			preds = append(preds, getPredicatesFromTypes(types)...)
 			preds = append(preds, x.StarAllPredicates()...)
@@ -97,6 +109,26 @@ func expandEdges(ctx context.Context, m *pb.Mutations) ([]*pb.DirectedEdge, erro
 			edgeCopy := *edge
 			edgeCopy.Attr = pred
 			edges = append(edges, &edgeCopy)
+		}
+
+		for _, pred := range preds_actual {
+			edgeCopy := *edge
+			edgeCopy.Attr = pred
+			edges = append(edges, &edgeCopy)
+
+			// We only want to delete the pred from <uid> + <_predicate_> posting list if this is	
+			// a SP* deletion operation. Otherwise we just continue.	
+			if edge.Op == pb.DirectedEdge_DEL && string(edge.Value) != x.Star {	
+				continue	
+			}	
+
+			e := &pb.DirectedEdge{	
+				Op:     edge.Op,	
+				Entity: edge.GetEntity(),	
+				Attr:   "_predicate_",	
+				Value:  []byte(pred),	
+			}	
+			edges = append(edges, e)	
 		}
 	}
 

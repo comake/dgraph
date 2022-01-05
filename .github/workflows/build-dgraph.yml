@@ -1,0 +1,43 @@
+name: build-dgraph
+
+on:
+  push:
+    branches:
+      - dgraph-personal
+
+jobs:
+  
+  build-dgraph:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2.1.5
+        with:
+          go-version: '^1.13.1' 
+
+      - name: Install dgraph dependencies
+        run: sudo apt-get update; sudo apt-get install gcc make
+
+      - name: Check Go installed
+        run: go version
+
+      - name: Checkout dgraph
+        uses: actions/checkout@v2
+        with:
+          repository: unigraph-dev/dgraph.git
+          ref: dgraph-personal
+
+      - name: Install dgraph
+        run: cd ./dgraph; make install
+
+      - name: Check dgraph installed
+        run: ls $(go env GOPATH)/bin | grep dgraph
+
+      - name: Upload dgraph as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: linux-dgraph
+          path: $(go env GOPATH)/bin/dgraph
+          if-no-files-found: error 
+
+        
