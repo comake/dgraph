@@ -27,18 +27,24 @@ jobs:
           repository: unigraph-dev/dgraph.git
           ref: dgraph-personal
 
-      - name: Install dgraph
+      - name: Install dgraph linux
         run: cd ./dgraph; make install
 
+      - name: Install dgraph macOS
+        run: GOOS=darwin make install
+
+      - name: Install dgraph windows
+        run: GOOS=windows make install
+
       - name: Check dgraph installed
-        run: ls $(go env GOPATH)/bin | grep dgraph
+        run: ls $(go env GOPATH)/bin | grep dgraph; ls $(go env GOPATH)/bin | grep darwin_amd64; ls $(go env GOPATH)/bin | grep darwin_amd64 
 
       - name: Move dgraph
-        run: mkdir ~/dist && mv $(go env GOPATH)/bin/dgraph ~/dist
+        run: mkdir ~/dist && mv $(go env GOPATH)/bin/* ~/dist
 
       - name: Upload dgraph as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: dgraph
-          path: ~/dist
+          name: dgraph-dist
+          path: ~/dist/
           if-no-files-found: error 
