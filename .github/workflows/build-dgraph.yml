@@ -8,7 +8,7 @@ on:
 jobs:
   
   build-dgraph:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Install Go
         uses: actions/setup-go@v2.1.5
@@ -33,11 +33,12 @@ jobs:
       - name: Check dgraph installed
         run: ls $(go env GOPATH)/bin | grep dgraph
 
+      - name: Move dgraph
+        run: mv $(go env GOPATH)/bin/dgraph /opt/unigraph
+
       - name: Upload dgraph as artifact
         uses: actions/upload-artifact@v2
         with:
           name: linux-dgraph
-          path: $(go env GOPATH)/bin/dgraph
+          path: /opt/unigraph/dgraph
           if-no-files-found: error 
-
-        
