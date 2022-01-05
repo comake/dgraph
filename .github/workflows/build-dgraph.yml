@@ -34,7 +34,7 @@ jobs:
         run: ls $(go env GOPATH)/bin | grep dgraph
 
       - name: Move dgraph
-        run: mv $(go env GOPATH)/bin/dgraph /opt/unigraph/dgraph
+        run: mv $(go env GOPATH)/bin/dgraph /opt/unigraph/
 
       - name: Upload dgraph as artifact
         uses: actions/upload-artifact@v2
