@@ -34,11 +34,11 @@ jobs:
         run: ls $(go env GOPATH)/bin | grep dgraph
 
       - name: Move dgraph
-        run: mv $(go env GOPATH)/bin/dgraph /opt/unigraph/linux-dgraph
+        run: mv $(go env GOPATH)/bin/dgraph /opt/unigraph/dgraph
 
       - name: Upload dgraph as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: linux-dgraph
+          name: dgraph
           path: /opt/unigraph/
           if-no-files-found: error 
