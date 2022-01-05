@@ -28,23 +28,34 @@ jobs:
           ref: dgraph-personal
 
       - name: Install dgraph linux
-        run: cd ./dgraph; make install
+        run: cd ./dgraph; make install; ls $(go env GOPATH)/bin | grep dgraph;
 
       - name: Install dgraph macOS
-        run: GOOS=darwin make install
+        run: GOOS=darwin make install; ls $(go env GOPATH)/bin | grep darwin_amd64;
 
       - name: Install dgraph windows
-        run: GOOS=windows make install
+        run: GOOS=windows make install; ls $(go env GOPATH)/bin | grep windows_amd64 
 
-      - name: Check dgraph installed
-        run: ls $(go env GOPATH)/bin | grep dgraph; ls $(go env GOPATH)/bin | grep darwin_amd64; ls $(go env GOPATH)/bin | grep darwin_amd64 
-
-      - name: Move dgraph
+      - name: Move dgraph builds to ~/dist
         run: mkdir ~/dist && mv $(go env GOPATH)/bin/* ~/dist
 
-      - name: Upload dgraph as artifact
+      - name: Upload linux build as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: dgraph-dist
-          path: ~/dist/
+          name: dgraph_linux_amd64
+          path: ~/dist/dgraph
+          if-no-files-found: error 
+
+      - name: Upload macOS build as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: dgraph_darwin_amd64
+          path: ~/dist/darwin_amd64
+          if-no-files-found: error 
+
+      - name: Upload Windows build as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: dgraph_windows_amd64
+          path: ~/dist/windows_amd64
           if-no-files-found: error 
