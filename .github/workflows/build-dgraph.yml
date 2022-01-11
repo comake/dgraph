@@ -2,8 +2,8 @@ name: build-dgraph
 
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches:
+      - dgraph-personal
       
 jobs:
   
