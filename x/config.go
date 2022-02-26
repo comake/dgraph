@@ -120,6 +120,9 @@ type WorkerOptions struct {
 	TLSServerConfig *tls.Config
 	// Raft stores options related to Raft.
 	Raft *z.SuperFlag
+	// Whether to expand edges without explicitly defining them in type system.
+	// Enabling it would decrease performance but add the flexibility to query arbitrary element for full data.
+	ExpandEdge bool
 	// Badger stores the badger options.
 	Badger badger.Options
 	// WhiteListedIPRanges is a list of IP ranges from which requests will be allowed.

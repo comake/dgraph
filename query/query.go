@@ -1500,6 +1500,13 @@ func (sg *SubGraph) populateUidValVar(doneVars map[string]varValue, sgPath []*Su
 
 	srcUids := codec.GetUids(sg.SrcUIDs)
 	switch {
+	case sg.Attr == "_predicate_":
+		// This is a predicates list.
+		doneVars[sg.Params.Var] = varValue{
+			strList: sg.valueMatrix,
+			path:    sgPath,
+			Vals:    make(map[uint64]types.Val),
+		}
 	case len(sg.counts) > 0:
 		// 1. When count of a predicate is assigned a variable, we store the mapping of uid =>
 		// count(predicate).
@@ -1953,6 +1960,24 @@ func uniquePreds(list []string) []string {
 	return preds
 }
 
+func uniqueValues(vl []*pb.ValueList) []string {
+	predMap := make(map[string]struct{})
+
+	for _, l := range vl {
+		for _, v := range l.Values {
+			if len(v.Val) > 0 {
+				predMap[string(v.Val)] = struct{}{}
+			}
+		}
+	}
+
+	preds := make([]string, 0, len(predMap))
+	for pred := range predMap {
+		preds = append(preds, pred)
+	}
+	return preds
+}
+
 func recursiveCopy(dst *SubGraph, src *SubGraph) {
 	dst.Attr = src.Attr
 	dst.Params = src.Params
@@ -1996,7 +2021,26 @@ func expandSubgraph(ctx context.Context, sg *SubGraph) ([]*SubGraph, error) {
 		}
 
 		switch child.Params.Expand {
-		// It could be expand(_all_) or expand(val(x)).
+		// It could be expand(_predicate_) or expand(_all_) or expand(val(x)).
+		case "_userpredicate_":
+			span.Annotate(nil, "expand(_userpredicate_)")
+
+			// Get the predicate list for expansion.
+			child.ExpandPreds, err = getNodePredicates(ctx, sg)
+			if err != nil {
+				return out, err
+			}
+			preds = append(preds, uniqueValues(child.ExpandPreds)...)
+
+			tmp := preds[:0]
+			for _, v := range preds {
+				predActual := x.ParseAttr(v)
+				if !(strings.HasPrefix(predActual, "unigraph.") || strings.HasPrefix(predActual, "~") || predActual == "_definition") {
+					tmp = append(tmp, v)
+				}
+			}
+			preds = tmp
+
 		case "_all_":
 			span.Annotate(nil, "expand(_all_)")
 			if len(typeNames) == 0 {
@@ -2765,6 +2809,38 @@ func isAggregatorFn(f string) bool {
 
 func isUidFnWithoutVar(f *gql.Function) bool {
 	return f != nil && f.Name == "uid" && len(f.NeedsVar) == 0
+}
+
+func getNodePredicates(ctx context.Context, sg *SubGraph) ([]*pb.ValueList, error) {
+	temp := &SubGraph{
+		Attr:    "_predicate_",
+		SrcUIDs: codec.ToList(sg.DestMap),
+		ReadTs:  sg.ReadTs,
+	}
+	taskQuery, err := createTaskQuery(ctx, temp)
+	if err != nil {
+		return nil, err
+	}
+	result, err := worker.ProcessTaskOverNetwork(ctx, taskQuery)
+	if err != nil {
+		return nil, err
+	}
+	return result.ValueMatrix, nil
+}
+
+func getReversePredicates(ctx context.Context) ([]string, error) {
+	schs, err := worker.GetSchemaOverNetwork(ctx, &pb.SchemaRequest{})
+	if err != nil {
+		return nil, err
+	}
+	preds := make([]string, 0, len(schs))
+	for _, sch := range schs {
+		if !sch.Reverse {
+			continue
+		}
+		preds = append(preds, "~"+sch.Predicate)
+	}
+	return preds, nil
 }
 
 func getNodeTypes(ctx context.Context, sg *SubGraph) ([]string, error) {

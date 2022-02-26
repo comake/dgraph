@@ -43,8 +43,13 @@ func newSchemaStore(initial *schema.ParsedSchema, opt *options, state *state) *s
 	}
 
 	s := &schemaStore{
-		schemaMap: map[string]*pb.SchemaUpdate{},
-		state:     state,
+		schemaMap: map[string]*pb.SchemaUpdate{
+			x.NamespaceAttr(x.GalaxyNamespace, "_predicate_"): {
+				ValueType: pb.Posting_STRING,
+				List:      true,
+			},
+		},
+		state: state,
 	}
 
 	// Initialize only for the default namespace. Initialization for other namespaces will be done

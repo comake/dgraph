@@ -124,6 +124,9 @@ they form a Raft group and provide synchronous replication.
 	flag.String("export", "export", "Folder in which to store exports.")
 	flag.StringP("zero", "z", fmt.Sprintf("localhost:%d", x.PortZeroGrpc),
 		"Comma separated list of Dgraph Zero addresses of the form IP_ADDRESS:PORT.")
+	flag.Bool("expand-edge", true,
+		"Enables the expand(_predicate_) feature. This is a bit expensive for large data loads because it"+
+			" doubles the number of mutations going on in the system.")
 
 	// Useful for running multiple servers on the same machine.
 	flag.IntP("port_offset", "o", 0,
@@ -842,6 +845,7 @@ func run() {
 		ExportPath:          Alpha.Conf.GetString("export"),
 		ZeroAddr:            strings.Split(Alpha.Conf.GetString("zero"), ","),
 		Raft:                raft,
+		ExpandEdge:          Alpha.Conf.GetBool("expand-edge"),
 		WhiteListedIPRanges: ips,
 		StrictMutations:     opts.MutationsMode == worker.StrictMutations,
 		AclEnabled:          keys.AclKey != nil,

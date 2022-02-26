@@ -89,6 +89,9 @@ func init() {
 		"Number of worker threads to use. MORE THREADS LEAD TO HIGHER RAM USAGE.")
 	flag.Int64("mapoutput_mb", 2048,
 		"The estimated size of each map file output. Increasing this increases memory usage.")
+	flag.Bool("expand_edges", true,
+		"Generate edges that allow nodes to be expanded using _predicate_ or expand(...). "+
+			"Disable to increase loading speed.")
 	flag.Int64("partition_mb", 4, "Pick a partition key every N megabytes of data.")
 	flag.Bool("skip_map_phase", false,
 		"Skip the map phase (assumes that map output files already exist).")
@@ -163,6 +166,7 @@ func run() {
 		TmpDir:           Bulk.Conf.GetString("tmp"),
 		NumGoroutines:    Bulk.Conf.GetInt("num_go_routines"),
 		MapBufSize:       uint64(Bulk.Conf.GetInt("mapoutput_mb")),
+		ExpandEdges:      Bulk.Conf.GetBool("expand_edges"),
 		PartitionBufSize: int64(Bulk.Conf.GetInt("partition_mb")),
 		SkipMapPhase:     Bulk.Conf.GetBool("skip_map_phase"),
 		CleanupTmp:       Bulk.Conf.GetBool("cleanup_tmp"),

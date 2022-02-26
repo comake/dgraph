@@ -104,6 +104,9 @@ const (
 	// message sizes allowable on the client size when dialing.
 	GrpcMaxSize = math.MaxInt32
 
+	// The attr used to store list of predicates for a node.
+	PredicateListAttr = "_predicate_"
+
 	// PortZeroGrpc is the default gRPC port for zero.
 	PortZeroGrpc = 5080
 	// PortZeroHTTP is the default HTTP port for zero.

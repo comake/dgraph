@@ -59,6 +59,7 @@ type options struct {
 	TmpDir           string
 	NumGoroutines    int
 	MapBufSize       uint64
+	ExpandEdges      bool
 	PartitionBufSize int64
 	SkipMapPhase     bool
 	CleanupTmp       bool

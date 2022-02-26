@@ -37,6 +37,7 @@ import (
 	"github.com/dgraph-io/dgraph/x"
 	"github.com/dgraph-io/ristretto/z"
 	"github.com/dgraph-io/sroar"
+	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -384,6 +385,9 @@ func GetConflictKey(pk x.ParsedKey, key []byte, t *pb.DirectedEdge) uint64 {
 
 	var conflictKey uint64
 	switch {
+	case x.ParseAttr(t.Attr) == "_predicate_":
+		// Don't check for conflict.
+		break
 	case schema.State().HasNoConflict(t.Attr):
 		break
 	case schema.State().HasUpsert(t.Attr):
@@ -949,22 +953,26 @@ func (l *List) Rollup(alloc *z.Allocator) ([]*bpb.KV, error) {
 	}
 
 	if l.forbid || len(out.parts) > MaxSplits {
-		var kvs []*bpb.KV
-		kv := &bpb.KV{
-			Key:      alloc.Copy(l.key),
-			Value:    nil,
-			UserMeta: []byte{BitForbidPosting},
-			Version:  out.newMinTs + 1,
-		}
-		kvs = append(kvs, kv)
+		glog.Infoln(`List is too big to split. Deleting the list.`)
+		/*
+			var kvs []*bpb.KV
+			kv := &bpb.KV{
+				Key:      alloc.Copy(l.key),
+				Value:    nil,
+				UserMeta: []byte{BitForbidPosting},
+				Version:  out.newMinTs + 1,
+			}
+			kvs = append(kvs, kv)
 
-		// Send deletion for the parts.
-		delKvs, err := deletionKvs(true)
-		if err != nil {
-			return nil, err
-		}
-		kvs = append(kvs, delKvs...)
-		return kvs, nil
+			// Send deletion for the parts.
+			delKvs, err := deletionKvs(true)
+			if err != nil {
+				return nil, err
+			}
+			kvs = append(kvs, delKvs...)
+			return kvs, nil
+		*/
+		glog.Infoln(`But we're not doing this because this doesn't make any sense!`)
 	}
 	if len(out.parts) > 0 {
 		// The main list for the split postings should not contain postings and bitmap.
