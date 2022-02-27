@@ -417,7 +417,12 @@ func (sg *SubGraph) isSimilar(ssg *SubGraph) bool {
 	// Below check doesn't differentiate between different filters.
 	// It is added to differential between `hasFriend` and `hasFriend @filter()`
 	if sg.Filters != nil {
-		if ssg.Filters != nil && len(sg.Filters) == len(ssg.Filters) {
+		if ssg.Filters != nil {
+			for idx, thisFilter := range sg.Filters {
+				if !thisFilter.isSimilar(ssg.Filters[idx]) {
+					return false
+				}
+			}
 			return true
 		}
 		return false
@@ -541,24 +546,24 @@ func treeCopy(gq *gql.GraphQuery, sg *SubGraph) error {
 	// children. But, in this case, we don't want to muck with the current
 	// node, because of the way we're dealing with the root node.
 	// So, we work on the children, and then recurse for grand children.
-	attrsSeen := make(map[string]struct{})
+	// attrsSeen := make(map[string]struct{})
 
 	for _, gchild := range gq.Children {
 		if sg.Params.Alias == "shortest" && gchild.Expand != "" {
 			return errors.Errorf("expand() not allowed inside shortest")
 		}
 
-		key := ""
-		if gchild.Alias != "" {
-			key = gchild.Alias
-		} else {
-			key = uniqueKey(gchild)
-		}
-		if _, ok := attrsSeen[key]; ok {
-			return errors.Errorf("%s not allowed multiple times in same sub-query.",
-				key)
-		}
-		attrsSeen[key] = struct{}{}
+		// key := ""
+		// if gchild.Alias != "" {
+		// 	key = gchild.Alias
+		// } else {
+		// 	key = uniqueKey(gchild)
+		// }
+		// if _, ok := attrsSeen[key]; ok {
+		// 	return errors.Errorf("%s not allowed multiple times in same sub-query.",
+		// 		key)
+		// }
+		// attrsSeen[key] = struct{}{}
 
 		args := params{
 			Alias:        gchild.Alias,

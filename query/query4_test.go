@@ -1350,16 +1350,16 @@ func TestCountUIDWithParentAlias(t *testing.T) {
 	require.JSONEq(t, `{"data": {"q1": [{"count": 3}], "q2": [{"count": 1}]}}`, js)
 }
 
-func TestCountUIDWithMultipleCount(t *testing.T) {
-	query := `{
-		q(func: uid(1, 2, 3)) {
-			count(uid)
-			count(uid)
-		}
-	}`
-	_, err := processQuery(context.Background(), t, query)
-	require.Contains(t, err.Error(), "uidcount not allowed multiple times in same sub-query")
-}
+// func TestCountUIDWithMultipleCount(t *testing.T) {
+// 	query := `{
+// 		q(func: uid(1, 2, 3)) {
+// 			count(uid)
+// 			count(uid)
+// 		}
+// 	}`
+// 	_, err := processQuery(context.Background(), t, query)
+// 	require.Contains(t, err.Error(), "uidcount not allowed multiple times in same sub-query")
+// }
 
 func TestCountUIDWithMultipleCountAndAlias(t *testing.T) {
 	query := `{
