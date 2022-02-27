@@ -1486,7 +1486,7 @@ func TestAggregateRoot5(t *testing.T) {
 		}
 	`
 	js := processQueryNoErr(t, query)
-	require.JSONEq(t, `{"data": {"me":[{"sum(val(m))":null}]}}`, js)
+	require.JSONEq(t, `{"data": {"me":[{"sum(val(m))":0}]}}`, js)
 }
 
 func TestAggregateRoot6(t *testing.T) {
@@ -1548,7 +1548,7 @@ func TestAggregateEmptyData(t *testing.T) {
 		}
 	`
 	js := processQueryNoErr(t, query)
-	require.JSONEq(t, `{"data": {"me":[{"avg(val(a))":null},{"min(val(a))":null},{"max(val(a))":null}]}}`, js)
+	require.JSONEq(t, `{"data": {"me":[{"avg(val(a))":0},{"min(val(a))":null},{"max(val(a))":null}]}}`, js)
 }
 
 func TestCountEmptyData(t *testing.T) {

@@ -601,7 +601,17 @@ func (ag *aggregator) divideByCount() {
 
 func (ag *aggregator) Value() (types.Val, error) {
 	if ag.result.Value == nil {
-		return ag.result, ErrEmptyVal
+		if ag.name == "avg" || ag.name == "sum" {
+			switch {
+			case ag.result.Tid != types.FloatID:
+				ag.result.Tid = types.IntID
+				ag.result.Value = int64(0)
+			case ag.result.Tid == types.FloatID:
+				ag.result.Value = float64(0)
+			}
+		} else {
+			return ag.result, ErrEmptyVal
+		}
 	}
 	ag.divideByCount()
 	if ag.result.Tid == types.FloatID {
