@@ -2,8 +2,8 @@ name: build-dgraph
 
 on:
   push:
-    branches:
-      - dgraph-personal
+    tags:
+      - "unigraph/v*.*.*"
       
 jobs:
   
