@@ -437,6 +437,7 @@ func mutationHandler(w http.ResponseWriter, r *http.Request) {
 	resp.Latency.ParsingNs = uint64(parseEnd.Sub(parseStart).Nanoseconds())
 	e := query.Extensions{
 		Txn:     resp.Txn,
+		Metrics: resp.Metrics,
 		Latency: resp.Latency,
 	}
 	sort.Strings(e.Txn.Keys)

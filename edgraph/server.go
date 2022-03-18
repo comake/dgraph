@@ -816,6 +816,11 @@ func (s *Server) doMutate(ctx context.Context, qc *queryContext, resp *api.Respo
 		cost := uint64(len(newUids) + len(edges))
 		resp.Metrics.NumUids["mutation_cost"] = cost
 		resp.Metrics.NumUids["_total"] = resp.Metrics.NumUids["_total"] + cost
+
+		for _, edge := range m.Edges {
+			uidKey := fmt.Sprintf("_u-0x%x", edge.Entity)
+			resp.Metrics.NumUids[uidKey] = 1
+		}
 	}
 	if !qc.req.CommitNow {
 		calculateMutationMetrics()
