@@ -53,7 +53,7 @@ This will put the source code in a Git repo under `$GOPATH/src/github.com/dgraph
 
 ### Protocol buffers
 
-We use [protocol buffers](https://developers.google.com/protocol-buffers/) to serialize data between our server and the Go client and also for inter-worker communication. If you make any changes to the `.proto` files, you would have to recompile them. 
+We use [protocol buffers](https://developers.google.com/protocol-buffers/) to serialize data between our server and the Go client and also for inter-worker communication. If you make any changes to the `.proto` files, you would have to recompile them.
 
 Install the `protoc` compiler which is required for compiling proto files used for gRPC communication. Get `protoc` version 3.0.0 or above from [GitHub releases page](https://github.com/google/protobuf/releases/latest) (look for the binary releases at the bottom, or compile from sources [following the instructions](https://github.com/google/protobuf/tree/master/src)).
 
@@ -142,7 +142,7 @@ Run the `test.sh` script in the root folder.
 
 
     $ ./test.sh
-    
+
     INFO: Running tests using the default cluster
     …
     INFO: Running test for github.com/dgraph-io/dgraph/algo
@@ -175,48 +175,13 @@ Run `go test` in the root folder.
 
 ## Doing a release
 
-* Create a branch called `release/v<x.y.z>` from master. For e.g. `release/v1.0.5`. Look at the
-   diff between the last release and master and make sure that `CHANGELOG.md` has all the changes
-   that went in. Also make sure that any new features/changes are added to the docs under
-   `wiki/content` to the relevant section.
-* Test any new features or bugfixes and then tag the final commit on the release branch like:
-
-  ```sh
-  git tag -s -a v1.0.5
-  ```
-
-* Push the release branch and the tagged commit.
-
-  ```sh
-  git push origin release/v<x.y.z>
-  git push origin v<x.y.z>
-  ```
-
-* Travis CI would run the `contrib/nightly/upload.sh` script when a new tag is pushed. This script
-  would create the binaries for `linux`, `darwin` and `windows` and also upload them to Github after
-  creating a new draft release. It would also publish a new docker image for the new release as well
-  as update the docker image with tag `latest` and upload them to docker hub.
-
-* Checkout the `master` branch and merge the tag to it and push it.
-
-  ```sh
-  git checkout master
-  git merge v<x.y.z>
-  git push origin master
-  ```
-
-* Once the draft release is published on Github by Travis, modify it to add the release notes. The release
-  notes would mostly be the same as changes for the current version in `CHANGELOG.md`. Finally publish the 
-  release and announce to users on [Discourse](https://discuss.dgraph.io).
-
-* To make sure that docs are added for the newly released version, add the version to
-   `wiki/scripts/build.sh`. It is also important for a release branch for the version to exist,
-   otherwise docs won't be built and published for it. SSH into the server serving the docs and pull
-   the latest version of `wiki/scripts/build.sh` from master branch and rerun it so that it can start
-   publishing docs for the latest version.
-
-* If any bugs were fixed with regards to query language or in the server then it is a good idea to
-  deploy the latest version on `play.dgraph.io`.
+run:
+```
+make version=v1.0.0 image
+docker push comake/dgraph:v1.0.0
+docker tag comake/dgraph:v1.0.0 comake/dgraph:latest
+docker push comake/dgraph:latest
+```
 
 ## Contributing
 
@@ -268,4 +233,3 @@ Most of Dgraph, Badger, and the Dgraph clients (dgo, dgraph-js, pydgraph and dgr
 Signed commits help in verifying the authenticity of the contributor. We use signed commits in Dgraph, and we prefer it, though it's not compulsory to have signed commits. This is a recommended step for people who intend to contribute to Dgraph on a regular basis.
 
 Follow instructions to generate and setup GPG keys for signing code commits on this [Github Help page](https://help.github.com/articles/signing-commits-with-gpg/).
-

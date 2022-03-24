@@ -21,7 +21,7 @@ Dgraph supports [GraphQL query syntax](https://dgraph.io/docs/master/query-langu
 
 ## Status
 
-Dgraph is [at version v21.03.0][rel] and is production-ready. Apart from the vast open source community, it is being used in
+Dgraph is [at version comake-dgraph/v1.0.0][rel] and is production-ready. Apart from the vast open source community, it is being used in
 production at multiple Fortune 500 companies, and by
 [Intuit Katlas](https://github.com/intuit/katlas) and [VMware Purser](https://github.com/vmware/purser).
 
@@ -40,7 +40,7 @@ curl https://get.dgraph.io -sSf | bash
 If you're using Docker, you can use the [official Dgraph image](https://hub.docker.com/r/dgraph/dgraph/).
 
 ```bash
-docker pull dgraph/dgraph:latest
+docker pull comake/dgraph:latest
 ```
 
 ## Install from Source
@@ -59,7 +59,7 @@ sudo apt-get install gcc make
 Then clone the Dgraph repository and use `make install` to install the Dgraph binary to `$GOPATH/bin`.
 
 ```bash
-git clone https://github.com/unigraph-dev/dgraph.git
+git clone https://github.com/comake/dgraph.git
 cd ./dgraph
 make install
 ```
